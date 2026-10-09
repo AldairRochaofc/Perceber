@@ -1,0 +1,268 @@
+/*
+ * PERCEBER — Design tokens
+ *
+ * Fonte única da verdade visual. Componentes usam apenas tokens semânticos
+ * (canvas, surface, text-muted, accent…); a paleta padrão do Tailwind é
+ * desligada para que nenhum valor solto entre no produto.
+ *
+ * Temas: os mesmos nomes são redefinidos em .theme-dusk (escuro suave) e
+ * .hc (alto contraste), sempre no elemento <html>.
+ */
+
+@theme {
+  /* Desliga paletas e escalas padrão: só o que está aqui existe. */
+  --color-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --font-*: initial;
+  --tracking-*: initial;
+  --leading-*: initial;
+  --ease-*: initial;
+
+  /* ───────── Cor · base ───────── */
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-white: #ffffff;
+
+  /* Superfícies claras e neutras: leitura e concentração */
+  --color-canvas: #f5f8ff;          /* névoa — fundo da página */
+  --color-surface: #ffffff;         /* papel — cartões, painéis */
+  --color-surface-sunken: #eef2fa;  /* áreas recuadas, trilhos */
+  --color-surface-tint: #eaf0ff;    /* destaque suave do acento */
+
+  /* Texto: todos os níveis legíveis passam 4,5:1 sobre qualquer superfície clara */
+  --color-ink: #0b1733;             /* 15,5–17,7:1 */
+  --color-text-muted: #34405c;      /* 9,0–10,3:1 */
+  --color-text-subtle: #56617c;     /* 5,4–6,2:1 — mínimo para texto útil */
+  --color-text-disabled: #8d9ab5;   /* só estados desabilitados (isento) */
+
+  /* Linhas */
+  --color-line: #dbe2ef;            /* divisórias decorativas */
+  --color-line-strong: #c3cde0;     /* contornos de cartões */
+  --color-control: #6f7d99;         /* borda de campos: ≥3:1 (WCAG 1.4.11) */
+
+  /* Azul profundo: introspecção e profundidade */
+  --color-deep: #0a1a47;            /* abismo */
+  --color-deep-2: #0f2463;
+  --color-deep-3: #17318a;
+  --color-on-deep: #ffffff;
+  --color-on-deep-muted: #b9c7ee;   /* 9,9:1 sobre deep */
+  --color-on-deep-subtle: #8fa3d9;  /* 6,7:1 sobre deep */
+  --color-on-deep-line: #2a3d78;
+
+  /* Azul elétrico: só para ação, seleção e foco */
+  --color-accent: #2563eb;          /* 5,2:1 sobre papel */
+  --color-accent-strong: #1d4ed8;   /* 6,7:1 */
+  --color-accent-soft: #eaf0ff;
+  --color-accent-line: #bfd0fb;
+  --color-on-accent: #ffffff;
+  --color-accent-on-deep: #7aa2ff;  /* 6,7:1 sobre deep */
+
+  /* Foco */
+  --color-focus: #2563eb;
+  --color-focus-on-deep: #9cc0ff;
+
+  /* Sinais de triagem: intensidade = profundidade do azul. Nunca vermelho. */
+  --color-signal-low: #0891b2;      /* preenchimento */
+  --color-signal-low-text: #0e7490; /* 5,0–5,4:1 */
+  --color-signal-low-soft: #e7f8fc;
+  --color-signal-moderate: #2563eb;
+  --color-signal-moderate-soft: #eaf0ff;
+  --color-signal-high: #1d4ed8;
+  --color-signal-high-soft: #e6ecfd;
+  --color-signal-wide: #1e3a8a;
+  --color-signal-wide-soft: #e4e8f7;
+  --color-signal-none: #56617c;
+  --color-signal-none-soft: #eef2fa;
+
+  /* Retorno do sistema */
+  --color-success: #0f6b5c;
+  --color-success-soft: #e6f5f1;
+  --color-attention: #9a4b06;
+  --color-attention-soft: #fff4e5;
+  --color-attention-line: #f2c98f;
+  --color-danger: #b42318;          /* só ações destrutivas */
+  --color-danger-soft: #fff0ee;
+
+  /* ───────── Tipografia ───────── */
+  /* Lexend: sans de traço arredondado, desenhada para reduzir o esforço visual de leitura */
+  --font-display: 'Lexend Variable', 'Lexend', ui-sans-serif, system-ui, 'Segoe UI', sans-serif;
+  --font-sans: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', ui-sans-serif, system-ui, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, Consolas, monospace;
+
+  /* Escala em rem: responde ao controle de tamanho de texto do produto. */
+  --text-caption: 0.8125rem;            /* 13px — metadados, legendas */
+  --text-caption--line-height: 1.45;
+  --text-sm: 0.875rem;                  /* 14px — apoio */
+  --text-sm--line-height: 1.55;
+  --text-body: 1rem;                    /* 16px — leitura */
+  --text-body--line-height: 1.65;
+  --text-ui: 1rem;                      /* 16px — controles */
+  --text-ui--line-height: 1.4;
+  --text-lead: 1.1875rem;               /* 19px — abertura de seção */
+  --text-lead--line-height: 1.6;
+  --text-title: 1.3125rem;              /* 21px — títulos de bloco (Lexend) */
+  --text-title--line-height: 1.3;
+  --text-title--letter-spacing: -0.01em;
+  --text-display-sm: clamp(1.5rem, 1.22rem + 0.9vw, 1.875rem);
+  --text-display-sm--line-height: 1.2;
+  --text-display-sm--letter-spacing: -0.015em;
+  --text-display-md: clamp(1.875rem, 1.4rem + 1.6vw, 2.625rem);
+  --text-display-md--line-height: 1.14;
+  --text-display-md--letter-spacing: -0.022em;
+  --text-display-lg: clamp(2.25rem, 1.6rem + 2.6vw, 3.625rem);
+  --text-display-lg--line-height: 1.1;
+  --text-display-lg--letter-spacing: -0.028em;
+  --text-display-xl: clamp(2.625rem, 1.5rem + 4.2vw, 4.875rem);
+  --text-display-xl--line-height: 1.06;
+  --text-display-xl--letter-spacing: -0.034em;
+
+  --font-weight-light: 300;     /* Lexend em tamanhos grandes */
+  --font-weight-normal: 400;
+  --font-weight-book: 400;      /* Lexend em títulos */
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --tracking-normal: 0;
+  --tracking-tight: -0.03em;   /* marca e números grandes */
+  --tracking-label: 0.04em;     /* rótulos de dados em mono */
+
+  --leading-none: 1;
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.7;
+
+  /* ───────── Forma ───────── */
+  --radius-xs: 6px;      /* marcadores mínimos */
+  --radius-sm: 10px;     /* chips, foco */
+  --radius-md: 14px;     /* campos, botões quadrados */
+  --radius-lg: 22px;     /* cartões */
+  --radius-xl: 32px;     /* painéis de destaque */
+  --radius-full: 9999px; /* pílulas: navegação, botões, seleção */
+
+  /* ───────── Elevação: luz difusa, nunca sombra cinza chapada ───────── */
+  --shadow-hairline: 0 0 0 1px rgb(11 23 51 / 0.06);
+  --shadow-soft: 0 1px 2px rgb(11 23 51 / 0.05), 0 10px 28px -14px rgb(15 36 99 / 0.18);
+  --shadow-lift: 0 2px 4px rgb(11 23 51 / 0.04), 0 28px 56px -24px rgb(15 36 99 / 0.32);
+  --shadow-glow: 0 12px 32px -12px rgb(37 99 235 / 0.55);
+
+  /* ───────── Movimento ───────── */
+  --ease-calm: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-exit: cubic-bezier(0.55, 0, 0.7, 0.2);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ───────── Layout ───────── */
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --container-prose: 40rem;  /* ~70 caracteres por linha */
+  --container-task: 44rem;   /* questionário */
+  --container-page: 76rem;
+}
+
+/* Durações expostas para CSS e para o GSAP (lidas em lib/motion.ts) */
+:root {
+  --duration-quick: 160ms;
+  --duration-base: 280ms;
+  --duration-slow: 560ms;
+  --focus-width: 2px;
+  --gutter: clamp(1rem, 0.4rem + 2.6vw, 2.5rem);
+  --section-space: clamp(4.5rem, 2.6rem + 6vw, 8.5rem);
+  color-scheme: light;
+
+  /* Escala de resposta nos gráficos (0 Nunca → 4 Quase sempre): um só azul, do claro ao
+     profundo. Validada como rampa ordinal (claridade monótona, degraus ≥ 0,06, ponta clara
+     ≥ 2:1 sobre o papel). on-scale = cor do número escrito dentro de cada degrau (≥ 4,5:1).
+     Fica fora do @theme porque os gráficos montam o nome do degrau em tempo de execução
+     (var(--color-scale-N)), e o Tailwind só emite as variáveis de tema que encontra no código. */
+  --color-scale-0: #8eadf0;
+  --color-scale-1: #5f8cea;         /* 3,3:1 — barras abaixo de 2,5 */
+  --color-scale-2: #2f66dd;
+  --color-scale-3: #1d47b8;         /* 7,9:1 — barras de 2,5 ou mais */
+  --color-scale-4: #142f7a;
+  --color-on-scale-0: #0b1733;
+  --color-on-scale-1: #0b1733;
+  --color-on-scale-2: #ffffff;
+  --color-on-scale-3: #ffffff;
+  --color-on-scale-4: #ffffff;
+}
+
+/* ───────── Tema escuro suave — reduz luminância para quem tem sensibilidade à luz ───────── */
+.theme-dusk {
+  color-scheme: dark;
+  --color-canvas: #0c1430;
+  --color-surface: #121c3d;
+  --color-surface-sunken: #0f1835;
+  --color-surface-tint: #182756;
+  --color-ink: #e9eefb;
+  --color-text-muted: #c3cde6;
+  --color-text-subtle: #9eabcb;
+  --color-text-disabled: #66749a;
+  --color-line: #222f59;
+  --color-line-strong: #2d3c6c;
+  --color-control: #7e8db4;
+  --color-deep: #070f2b;
+  --color-deep-2: #0b1640;
+  --color-deep-3: #13256b;
+  --color-on-deep-line: #24386f;
+  --color-accent: #7aa2ff;
+  --color-accent-strong: #a3bfff;
+  --color-accent-soft: #1a2a5c;
+  --color-accent-line: #2f4a96;
+  --color-on-accent: #0b1733;
+  --color-focus: #9cc0ff;
+  --color-signal-low: #22b4d6;
+  --color-signal-low-text: #5fd0ea;
+  --color-signal-low-soft: #10324a;
+  --color-signal-moderate: #6f97ff;
+  --color-signal-moderate-soft: #1a2a5c;
+  --color-signal-high: #8fb0ff;
+  --color-signal-high-soft: #1c2c63;
+  --color-signal-wide: #b7caff;
+  --color-signal-wide-soft: #222f63;
+  --color-signal-none: #9eabcb;
+  --color-signal-none-soft: #172248;
+  /* No escuro a ênfase sobe para o claro: 0 é o degrau mais apagado, 4 o mais luminoso. */
+  --color-scale-0: #3352a3;
+  --color-scale-1: #4670d4;
+  --color-scale-2: #6b94f7;
+  --color-scale-3: #9fbbff;
+  --color-scale-4: #d2deff;
+  --color-on-scale-0: #ffffff;
+  --color-on-scale-1: #ffffff;
+  --color-on-scale-2: #0b1733;
+  --color-on-scale-3: #0b1733;
+  --color-on-scale-4: #0b1733;
+  --color-success: #5fd3b8;
+  --color-success-soft: #0f3330;
+  --color-attention: #f3b866;
+  --color-attention-soft: #33240f;
+  --color-attention-line: #6b4a1c;
+  --color-danger: #ff9b8f;
+  --color-danger-soft: #3a1714;
+}
+
+/* ───────── Alto contraste — escurece texto secundário e reforça bordas ───────── */
+.hc {
+  --color-text-muted: #0b1733;
+  --color-text-subtle: #22304f;
+  --color-line: #8d9ab5;
+  --color-line-strong: #56617c;
+  --color-control: #34405c;
+  --color-accent: #1d4ed8;
+  --color-accent-strong: #1e3a8a;
+  --color-signal-low-text: #0b5c70;
+  --focus-width: 3px;
+}
+.hc.theme-dusk {
+  --color-text-muted: #ffffff;
+  --color-text-subtle: #dfe6f8;
+  --color-line: #6f7fae;
+  --color-line-strong: #9eabcb;
+  --color-control: #c3cde6;
+  --color-accent: #a3bfff;
+  --color-accent-strong: #ffffff;
+}

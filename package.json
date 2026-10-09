@@ -1,0 +1,47 @@
+{
+  "name": "perceber",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "description": "PERCEBER — plataforma de triagem e investigação de características associadas ao autismo em adultos. Não diagnóstica.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:e2e": "node e2e/run.mjs",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run build"
+  },
+  "dependencies": {
+    "@fontsource-variable/jetbrains-mono": "5.3.0",
+    "@fontsource-variable/lexend": "5.3.0",
+    "@fontsource-variable/plus-jakarta-sans": "5.3.0",
+    "@gsap/react": "2.1.2",
+    "gsap": "3.13.0",
+    "lucide-react": "0.560.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.11.2",
+    "@eslint/js": "9.39.2",
+    "@tailwindcss/vite": "4.1.18",
+    "@types/node": "22.19.1",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "5.1.2",
+    "eslint": "9.39.2",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "eslint-plugin-react-refresh": "0.4.24",
+    "globals": "16.5.0",
+    "playwright": "1.56.1",
+    "tailwindcss": "4.1.18",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.48.1",
+    "vite": "7.3.0",
+    "vitest": "3.2.4"
+  }
+}

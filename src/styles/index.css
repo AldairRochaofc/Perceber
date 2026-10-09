@@ -1,0 +1,181 @@
+@import 'tailwindcss';
+@import './tokens.css';
+
+/* Variantes de tema controladas pela classe no <html> */
+@custom-variant dusk (&:where(.theme-dusk, .theme-dusk *));
+@custom-variant hc (&:where(.hc, .hc *));
+@custom-variant calm (&:where(.reduce-motion, .reduce-motion *));
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-padding-top: 6rem;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    font-feature-settings: 'ss01', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    min-height: 100svh;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: var(--font-weight-book);
+    text-wrap: balance;
+    color: var(--color-ink);
+  }
+
+  p, li, dd { text-wrap: pretty; }
+
+  /* Itens de grid nunca forçam a página a rolar de lado: tabelas e listas largas
+     rolam dentro do próprio contêiner, e palavras longas quebram. */
+  .grid > *, .container-page > * { min-width: 0; }
+  h1, h2, h3, h4, p, li, dd, dt, td, th { overflow-wrap: break-word; }
+
+  a { color: var(--color-accent); text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
+  a:hover { color: var(--color-accent-strong); }
+
+  ::selection { background: var(--color-accent-soft); color: var(--color-ink); }
+
+  /* Foco: sempre visível, coerente, mais espesso em alto contraste */
+  :focus-visible {
+    outline: var(--focus-width) solid var(--color-focus);
+    outline-offset: 3px;
+    border-radius: var(--radius-sm);
+  }
+  .on-deep :focus-visible { outline-color: var(--color-focus-on-deep); }
+
+  /* Números que se comparam usam algarismos de largura fixa */
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  [hidden] { display: none !important; }
+}
+
+/* ───────── Utilitários do sistema ───────── */
+@utility container-page {
+  width: 100%;
+  max-width: var(--container-page);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+@utility container-task {
+  width: 100%;
+  max-width: var(--container-task);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+@utility section-space {
+  padding-block: var(--section-space);
+}
+@utility font-display {
+  font-family: var(--font-display);
+}
+@utility measure {
+  max-width: var(--container-prose);
+}
+@utility label-data {
+  /* Mono só para fatos auditáveis: versões, códigos, IDs, hashes, contagens. */
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  line-height: var(--text-caption--line-height);
+  letter-spacing: var(--tracking-label);
+  font-feature-settings: 'zero' 1;
+}
+@utility sr-only-focusable {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  &:focus, &:focus-within {
+    position: fixed;
+    width: auto;
+    height: auto;
+    clip-path: none;
+  }
+}
+
+/* Textura de grão: luz de película, nunca acima de 0,3 de opacidade */
+@utility grain {
+  isolation: isolate;
+  position: relative;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.28;
+    mix-blend-mode: soft-light;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+  }
+}
+
+/* Vidro da navegação */
+@utility glass {
+  background: color-mix(in oklab, var(--color-surface) 78%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+}
+
+/* Malha de pontos: papel milimetrado do mapa */
+@utility dot-grid {
+  background-image: radial-gradient(color-mix(in oklab, var(--color-accent) 18%, transparent) 1px, transparent 1.2px);
+  background-size: 22px 22px;
+}
+
+/* Transição de entrada de rota: só opacidade, conteúdo nunca fica oculto para leitores */
+@keyframes route-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.route-enter { animation: route-in var(--duration-base) var(--ease-calm) both; }
+
+/* Balão de detalhes dos gráficos */
+@keyframes tip-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+.chart-tip { animation: tip-in var(--duration-quick) var(--ease-calm) both; }
+
+@keyframes breathe {
+  0%, 100% { transform: scale(0.72); }
+  45%, 55% { transform: scale(1); }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ───────── Movimento reduzido: sistema ou preferência do produto ───────── */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+.reduce-motion *, .reduce-motion ::before, .reduce-motion ::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* ───────── Impressão: o relatório vira documento ───────── */
+@media print {
+  @page { margin: 16mm 14mm; }
+  html, body { background: #fff !important; color: #000 !important; font-size: 11pt; }
+  .no-print { display: none !important; }
+  .print-plain { box-shadow: none !important; border-color: #c3cde0 !important; background: #fff !important; }
+  .print-break { break-before: page; }
+  .avoid-break { break-inside: avoid; }
+  a { color: #000; text-decoration: none; }
+}
