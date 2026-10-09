@@ -1,4 +1,4 @@
-import { FileText, Share2, Layers } from 'lucide-react'
+import { FileText, Share2, Layers, PlayCircle, RotateCcw } from 'lucide-react'
 import { DOMAIN_BY_ID } from '../../domain/domains'
 import { MODULE_BY_ID } from '../../domain/modules'
 import { CANNOT_SUPPORT, CAN_SUPPORT, NEXT_STEP, SIGNALS } from '../../domain/signals'
@@ -38,6 +38,7 @@ export function ResultPage({ match }: { match: RouteMatch }) {
   const contextScores = result.domains.filter((d) => DOMAIN_BY_ID[d.domain].group === 'context')
   const signal = result.signal ? SIGNALS[result.signal] : null
   const hasCooccurring = !!latestCompleted(state, 'cooccurring')
+  const openRetake = state.sessions.find((x) => x.moduleId === session.moduleId && x.status === 'in-progress')
   const mood = result.domains.find((d) => d.domain === 'mood')
 
   return (
@@ -209,6 +210,15 @@ export function ResultPage({ match }: { match: RouteMatch }) {
           {isCentral && !hasCooccurring && (
             <Button to="/antes-de-comecar?modulo=cooccurring" variant="secondary" icon={<Layers size={18} aria-hidden="true" />}>
               Responder áreas coocorrentes
+            </Button>
+          )}
+          {openRetake ? (
+            <Button to={`/avaliacao/${openRetake.id}`} variant="secondary" icon={<PlayCircle size={18} aria-hidden="true" />}>
+              Continuar novo teste
+            </Button>
+          ) : (
+            <Button to={`/antes-de-comecar?modulo=${session.moduleId}`} variant="secondary" icon={<RotateCcw size={18} aria-hidden="true" />}>
+              Refazer o teste
             </Button>
           )}
         </div>
