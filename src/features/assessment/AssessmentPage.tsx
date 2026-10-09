@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, Check, LifeBuoy, LogOut, Pause, Settings2 } from 'lucide-react'
 import { DOMAIN_BY_ID } from '../../domain/domains'
 import { itemOf, nextItem, remainingRange, sections, toMap } from '../../domain/engine'
-import { SCALE, itemsFor } from '../../domain/items'
+import { SCALE, itemText, itemsFor } from '../../domain/items'
 import { MODULE_BY_ID } from '../../domain/modules'
 import type { AnswerValue, AssessmentSession, Item } from '../../domain/types'
 import { A11yPanel } from '../../layout/A11yPanel'
@@ -135,10 +135,18 @@ function Runner({ session }: { session: AssessmentSession }) {
 
   const finish = async () => {
     setPhase('processing')
-    completeSession(session.id)
-    if (!reduced) await new Promise((r) => setTimeout(r, 700))
     const name = profile?.preferredName
-    await crossThreshold(name ? `Seu mapa está pronto, ${name}.` : 'Seu mapa está pronto.', () => navigate(`/resultado/${session.id}`), reduced)
+    // A cortina entra já no clique. A sessão só é concluída com a tela coberta:
+    // concluir antes dispara o redirecionamento automático para o resultado,
+    // e a cortina acabava aparecendo depois, por cima do resultado.
+    await crossThreshold(
+      name ? `Seu mapa está pronto, ${name}.` : 'Seu mapa está pronto.',
+      () => {
+        completeSession(session.id)
+        navigate(`/resultado/${session.id}`)
+      },
+      reduced,
+    )
   }
 
   const currentSection = item ? secs.find((s) => s.domain === item.domain) : null
@@ -188,7 +196,7 @@ function Runner({ session }: { session: AssessmentSession }) {
                 {item.tier === 'followup' && <span className="rounded-full bg-accent-soft px-2 py-0.5 text-caption font-semibold text-accent-strong">aprofundamento</span>}
               </p>
               <h1 id="question" ref={headingRef} tabIndex={-1} data-page-title className="text-display-md font-light outline-none">
-                {item.text}
+                {itemText(item, session.form)}
               </h1>
               {item.example && <p className="text-text-muted">{item.example}</p>}
             </div>

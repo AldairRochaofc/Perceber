@@ -21,17 +21,12 @@ import { cx } from '../../ui/cx'
 type Tab = 'modules' | 'release' | 'audit' | 'permissions' | 'pending'
 
 export function GovernancePage() {
-  const { role } = useStore()
   const [tab, setTab] = useState<Tab>('modules')
   return (
     <div className="container-page grid gap-10 pb-10">
       <PageHeader
         title="Governança."
-        lead={
-          role === 'admin'
-            ? 'Módulos, versões, permissões e auditoria. A administração não vê respostas individuais.'
-            : 'Evidências, qualidade e liberação dos módulos. O comitê não tem acesso à identidade dos participantes.'
-        }
+        lead="Módulos, versões, aprovações, permissões e auditoria. Respostas individuais ficam com a pessoa e com quem ela autorizar."
       />
       <dl className="grid gap-6 rounded-lg bg-surface p-5 ring-1 ring-line sm:grid-cols-4">
         <Meta label="Plataforma" mono>
@@ -131,7 +126,7 @@ function ModulesEvidence() {
 
 function Release() {
   const { checklist, role } = useStore()
-  const canApprove = role === 'committee'
+  const canApprove = role === 'admin'
   return (
     <div className="grid gap-12">
       <section aria-labelledby="checklist-title" className="grid gap-6">
@@ -225,7 +220,7 @@ function Audit() {
               <tr key={e.seq}>
                 <td className={`${td} tabular`}>{e.seq}</td>
                 <td className={`${td} whitespace-nowrap`}>{fmtDateTime(e.at)}</td>
-                <td className={td}>{ROLE_LABEL[e.role]}</td>
+                <td className={td}>{ROLE_LABEL[e.role] ?? e.role}</td>
                 <td className={td}>{ACTION_LABEL[e.action] ?? e.action}</td>
                 <td className={`${td} text-text-muted`}>{e.target || '—'}</td>
                 <td className={`${td} label-data`}>{shortHash(e.hash)}</td>
@@ -298,7 +293,7 @@ function Permissions() {
         </tbody>
       </Table>
       <p className="text-sm text-text-subtle">
-        Profissionais, pesquisadores, administração e comitê exigem autenticação multifator em produção. Nesta demonstração, a troca de perfil é livre e fica registrada.
+        Profissionais e administração exigem autenticação multifator em produção. Nesta demonstração, a troca de perfil é livre e fica registrada.
       </p>
     </div>
   )

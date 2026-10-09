@@ -3,15 +3,18 @@ import { appendAudit } from '../domain/audit'
 import { CONSENT_VERSION, consentTextHash } from '../domain/consents'
 import { PROFESSIONAL_BY_ID } from '../domain/content'
 import { pruneResponses } from '../domain/engine'
+import { FORM_COUNT } from '../domain/items'
 import { MODULE_BY_ID, PLATFORM_VERSION } from '../domain/modules'
 import { computeResult } from '../domain/scoring'
+import { itemTiming, mean, responseReliability } from '../domain/timing'
+import { registerPerson, saveRespondTime, updatePerson } from '../data/db'
 import type {
   AnswerValue, AssessmentSession, AuditEntry, ChecklistKey, ChecklistState, ConsentChoice, ConsentId, ConsentRecord,
   ContextFactors, Eligibility, ExportRecord, ModuleId, Prefs, Profile, Role, ShareGrant, ShareScope,
 } from '../domain/types'
 import { addDays } from '../lib/format'
 import { accessCode, normalizeCode, uid } from '../lib/ids'
-import { readJSON, removeKey, writeJSON } from '../lib/storage'
+import { readJSON, writeJSON } from '../lib/storage'
 
 /**
  * Estado da aplicação. Nesta versão de demonstração tudo vive no navegador
@@ -72,10 +75,16 @@ const initial = (): State => ({
 function load(): State {
   const saved = readJSON<State>(KEY)
   if (!saved || saved.schema !== 2) return initial()
-  return { ...initial(), ...saved, prefs: { ...DEFAULT_PREFS, ...saved.prefs } }
+  const role: Role = ['participant', 'professional', 'admin'].includes(saved.role) ? saved.role : 'participant'
+  return { ...initial(), ...saved, role, prefs: { ...DEFAULT_PREFS, ...saved.prefs } }
 }
 
 let state: State = load()
+if (state.profile) syncPerson(state.profile)
+
+function syncPerson(p: Profile) {
+  registerPerson({ id: p.id, name: p.civilName || p.preferredName, gender: p.gender ?? 'prefer-not', ageBand: p.ageBand, createdAt: p.createdAt })
+}
 const listeners = new Set<() => void>()
 
 function set(next: State) {
@@ -140,11 +149,23 @@ export function recordConsent(consentId: ConsentId, choice: ConsentChoice, conte
 
 export function createProfile(data: Omit<Profile, 'id' | 'createdAt' | 'updatedAt' | 'language'>) {
   const at = now()
-  update((s) => audit({ ...s, role: 'participant', profile: { ...data, id: uid('pf'), language: 'pt-BR', createdAt: at, updatedAt: at } }, 'profile.created'))
+  const profile: Profile = { ...data, id: uid('pf'), language: 'pt-BR', createdAt: at, updatedAt: at }
+  update((s) => audit({ ...s, role: 'participant', profile }, 'profile.created'))
+  syncPerson(profile)
 }
 
 export function updateProfile(patch: Partial<Profile>) {
   update((s) => (s.profile ? audit({ ...s, profile: { ...s.profile, ...patch, updatedAt: now() } }, 'profile.updated', Object.keys(patch).join(', ')) : s))
+  const p = state.profile
+  if (p) updatePerson(p.id, { name: p.civilName || p.preferredName, gender: p.gender ?? 'prefer-not', ageBand: p.ageBand })
+}
+
+/**
+ * Novo participante, do zero: a pessoa atual continua registrada (DB e
+ * auditoria), e o app volta ao início com consentimentos e perfil novos.
+ */
+export function startOver() {
+  update((s) => audit({ ...s, role: 'participant', profile: null, eligibility: null, consents: [] }, 'participant.new', s.profile?.id ?? ''))
 }
 
 export function recordEligibility(e: Omit<Eligibility, 'at'>) {
@@ -154,12 +175,15 @@ export function recordEligibility(e: Omit<Eligibility, 'at'>) {
 /* ───────── Avaliações ───────── */
 
 export function startSession(moduleId: ModuleId): string {
-  const open = state.sessions.find((x) => x.moduleId === moduleId && x.status === 'in-progress')
+  const open = mySessions(state).find((x) => x.moduleId === moduleId && x.status === 'in-progress')
   if (open) return open.id
   const module = MODULE_BY_ID[moduleId]
   const at = now()
   const session: AssessmentSession = {
     id: uid('av'),
+    personId: state.profile?.id,
+    // Cada nova avaliação do módulo usa a forma seguinte (A → B → C → A…).
+    form: state.sessions.filter((x) => x.moduleId === moduleId).length % FORM_COUNT,
     moduleId,
     moduleVersion: module.version,
     itemBankVersion: module.itemBankVersion,
@@ -183,6 +207,25 @@ export function answer(sessionId: string, itemId: string, value: AnswerValue | n
       return { ...x, responses: pruneResponses(x.moduleId, responses), updatedAt: now() }
     }),
   }))
+  const session = state.sessions.find((x) => x.id === sessionId)
+  const personId = session?.personId ?? state.profile?.id
+  if (!session || !personId) return
+  const timing = itemTiming(itemId, session.form)
+  const r = responseReliability(latencyMs, value, timing)
+  saveRespondTime({
+    personId,
+    sessionId,
+    moduleId: session.moduleId,
+    itemId,
+    form: session.form ?? 0,
+    complexity: timing.complexity,
+    latencyMs: Math.round(latencyMs),
+    idealMs: timing.idealMs,
+    timeConfidence: r.time,
+    answerConfidence: r.answer,
+    reliability: r.reliability,
+    at: now(),
+  })
 }
 
 export function setContext(sessionId: string, context: ContextFactors) {
@@ -202,20 +245,15 @@ export function completeSession(sessionId: string) {
       result.inputHash.slice(0, 12),
     )
   })
-}
-
-export function deleteSession(sessionId: string) {
-  update((s) =>
-    audit(
-      {
-        ...s,
-        sessions: s.sessions.filter((x) => x.id !== sessionId),
-        shares: s.shares.map((g) => (g.sessionId === sessionId && !g.revokedAt ? { ...g, revokedAt: now() } : g)),
-      },
-      'assessment.deleted',
-      sessionId,
-    ),
-  )
+  const done = state.sessions.find((x) => x.id === sessionId)
+  const personId = done?.personId ?? state.profile?.id
+  if (!done?.result || !personId) return
+  const mine = state.sessions.filter((x) => x.status === 'completed' && (x.personId ?? state.profile?.id) === personId)
+  updatePerson(personId, {
+    completed: mine.length,
+    lastSignal: done.result.signal ?? null,
+    reliability: mean(mine.flatMap((x) => x.responses.map((r) => responseReliability(r.latencyMs, r.value, itemTiming(r.itemId, x.form)).reliability))),
+  })
 }
 
 /* ───────── Compartilhamento ───────── */
@@ -300,18 +338,12 @@ export function exportAllData(): string {
   )
 }
 
-export function eraseAll() {
-  removeKey(KEY)
-  const fresh = initial()
-  set({ ...fresh, prefs: state.prefs, audit: appendAudit([], { role: 'participant', action: 'data.erased' }) })
-}
-
 /* ───────── Governança e pesquisa ───────── */
 
 export function setChecklist(key: ChecklistKey, approved: boolean) {
   update((s) =>
     audit(
-      { ...s, checklist: { ...s.checklist, [key]: approved ? { approved, by: s.role === 'committee' ? 'Comitê científico' : 'Administração', at: now() } : { approved: false } } },
+      { ...s, checklist: { ...s.checklist, [key]: approved ? { approved, by: 'Administração', at: now() } : { approved: false } } },
       'checklist.updated',
       key,
       approved ? 'aprovado' : 'retirado',
@@ -330,8 +362,17 @@ export function logResearchExport(dimension: string, domain: string, rows: numbe
 
 /* ───────── Seletores ───────── */
 
+/** Sessões da pessoa que está usando o app agora. */
+export const mySessions = (s: State) => s.sessions.filter((x) => !x.personId || x.personId === s.profile?.id)
+
+/** Compartilhamentos das avaliações da pessoa atual. */
+export const myShares = (s: State) => {
+  const ids = new Set(mySessions(s).map((x) => x.id))
+  return s.shares.filter((g) => ids.has(g.sessionId))
+}
+
 export const completedSessions = (s: State) =>
-  s.sessions.filter((x) => x.status === 'completed' && x.result).sort((a, b) => (b.completedAt ?? '').localeCompare(a.completedAt ?? ''))
+  mySessions(s).filter((x) => x.status === 'completed' && x.result).sort((a, b) => (b.completedAt ?? '').localeCompare(a.completedAt ?? ''))
 
 export const latestCompleted = (s: State, moduleId: ModuleId) => completedSessions(s).find((x) => x.moduleId === moduleId) ?? null
 

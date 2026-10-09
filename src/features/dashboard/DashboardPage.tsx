@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { ArrowDownRight, ArrowRight, ArrowUpRight, FileText, GitCompareArrows, MessageSquareText, Minus, PlayCircle, Trash2 } from 'lucide-react'
+import { ArrowDownRight, ArrowRight, ArrowUpRight, FileText, GitCompareArrows, MessageSquareText, Minus, PlayCircle } from 'lucide-react'
 import { DOMAIN_BY_ID } from '../../domain/domains'
 import { remainingRange } from '../../domain/engine'
 import { MODULES, MODULE_BY_ID } from '../../domain/modules'
@@ -7,23 +6,20 @@ import { QUALITY_LEVEL_LABEL } from '../../domain/scoring'
 import { SIGNALS } from '../../domain/signals'
 import type { AssessmentSession } from '../../domain/types'
 import { fmtDateShort, fmtDecimal, plural } from '../../lib/format'
-import { completedSessions, deleteSession, latestCompleted, professionalName, shareStatus, useStore } from '../../state/store'
+import { completedSessions, latestCompleted, myShares, mySessions, professionalName, shareStatus, useStore } from '../../state/store'
 import { Button } from '../../ui/Button'
-import { Dialog } from '../../ui/Dialog'
 import { Strip } from '../../ui/DomainList'
 import { PageHeader, SectionTitle } from '../../ui/PageHeader'
 import { PatternSwatch } from '../../ui/patterns'
 import { Badge, EmptyState, Surface } from '../../ui/Surface'
 import { Table, td, th } from '../../ui/Table'
-import { notify } from '../../ui/Toast'
 
 export function DashboardPage() {
   const state = useStore()
   const done = completedSessions(state)
   const latest = latestCompleted(state, 'central')
-  const [toDelete, setToDelete] = useState<AssessmentSession | null>(null)
-  const activeShares = state.shares.filter((g) => shareStatus(g) === 'active')
-  const observations = state.shares.flatMap((g) => g.observations.map((o) => ({ ...o, grant: g })))
+  const activeShares = myShares(state).filter((g) => shareStatus(g) === 'active')
+  const observations = myShares(state).flatMap((g) => g.observations.map((o) => ({ ...o, grant: g })))
 
   return (
     <div className="container-page grid gap-16 pb-10">
@@ -34,7 +30,7 @@ export function DashboardPage() {
         <SectionTitle id="modulos-title" title="Seus módulos" />
         <ul className="grid gap-3">
           {MODULES.map((m) => {
-            const open = state.sessions.find((s) => s.moduleId === m.id && s.status === 'in-progress')
+            const open = mySessions(state).find((s) => s.moduleId === m.id && s.status === 'in-progress')
             const last = latestCompleted(state, m.id)
             const left = open ? remainingRange(m.id, open.responses) : null
             return (
@@ -152,13 +148,9 @@ export function DashboardPage() {
                     <a href={`#/resultado/${s.id}`} className="mr-4 font-semibold">
                       Resultado
                     </a>
-                    <a href={`#/relatorio/${s.id}`} className="mr-4 font-semibold">
+                    <a href={`#/relatorio/${s.id}`} className="font-semibold">
                       Relatório
                     </a>
-                    <button type="button" onClick={() => setToDelete(s)} className="inline-flex items-center gap-1 rounded-sm font-semibold text-danger hover:underline">
-                      <Trash2 size={15} aria-hidden="true" />
-                      Excluir
-                    </button>
                   </td>
                 </tr>
               ))}
@@ -203,32 +195,6 @@ export function DashboardPage() {
           )}
         </div>
       </section>
-
-      <Dialog
-        open={!!toDelete}
-        onClose={() => setToDelete(null)}
-        size="sm"
-        title="Excluir esta avaliação?"
-        description="As respostas e o resultado serão apagados deste navegador, e os acessos ligados a ela serão revogados. Não é possível desfazer."
-        actions={
-          <>
-            <Button variant="secondary" onClick={() => setToDelete(null)}>
-              Manter
-            </Button>
-            <Button
-              variant="danger"
-              icon={<Trash2 size={17} aria-hidden="true" />}
-              onClick={() => {
-                deleteSession(toDelete!.id)
-                setToDelete(null)
-                notify('Avaliação excluída')
-              }}
-            >
-              Excluir avaliação
-            </Button>
-          </>
-        }
-      />
     </div>
   )
 }

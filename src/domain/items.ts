@@ -111,3 +111,76 @@ export const SCALE = [
 ] as const
 
 export const SCALE_LABEL = (value: number) => SCALE[Math.round(value)]?.label ?? '—'
+
+/**
+ * Formas paralelas (B e C) de cada item. Mesmo construto, mesma direção
+ * (itens `reverse` continuam invertidos), redação diferente. Cada nova
+ * avaliação usa a forma seguinte, para que quem refaz o teste não leia
+ * exatamente as mesmas frases.
+ */
+const ALT_FORMS: Record<string, [string, string]> = {
+  s1: ['Quando várias pessoas conversam juntas, não consigo achar a hora de falar.', 'Em rodas de conversa, quando percebo a minha vez de falar, o assunto já mudou.'],
+  s2: ['Custo a notar que a outra pessoa já quer terminar o papo.', 'Só percebo que alguém queria encerrar a conversa quando a pessoa diz isso com todas as letras.'],
+  s3: ['Depois de passar tempo com outras pessoas, preciso ficar sozinho(a) para recarregar.', 'Encontros com pessoas me deixam sem energia e preciso de um tempo isolado(a) depois.'],
+  s4: ['Começar e cultivar amizades me custa mais esforço do que parece custar aos outros.', 'Manter amigos é, para mim, um trabalho que as outras pessoas parecem fazer sem esforço.'],
+  s5: ['Em momentos sociais sem regras definidas, como festas ou pausas, fico sem saber como agir.', 'Quando não há um roteiro, como em festas ou no intervalo, fico perdido(a) sobre o que fazer.'],
+  c1: ['Ironias e indiretas costumam me escapar, e eu entendo a frase literalmente.', 'Levo ao pé da letra coisas que as pessoas disseram por ironia ou de forma indireta.'],
+  c2: ['O tom de voz e a expressão do rosto das pessoas me dizem pouco sobre o que elas sentem.', 'Tenho dificuldade em ler as emoções de alguém pela voz ou pelo rosto.'],
+  c3: ['Percebo com facilidade o que as pessoas querem dizer sem falar diretamente.', 'Capto sem esforço os recados implícitos numa conversa.'],
+  c4: ['Já me disseram que minhas mensagens soam mais duras ou diretas do que eu quis.', 'Minhas mensagens parecem frias ou diretas demais para os outros, mesmo sem essa intenção.'],
+  c5: ['Assuntos importantes, prefiro escrever do que falar, porque me expresso melhor assim.', 'Escrevendo, consigo dizer o que penso com mais clareza do que falando.'],
+  e1: ['Quando há muito barulho em volta, fica difícil entender o que alguém está falando comigo.', 'Em lugares com várias conversas ao mesmo tempo, não consigo acompanhar quem fala comigo.'],
+  e2: ['Deixo de usar roupas por causa de etiquetas, costuras ou tecidos que me incomodam.', 'Algumas texturas de roupa me incomodam tanto que prefiro não vestir a peça.'],
+  e3: ['Luz muito intensa ou que pisca me incomoda ou me cansa.', 'Fico desconfortável ou cansado(a) em lugares com luz forte ou piscante.'],
+  e4: ['Lugares com muito barulho, luz e movimento me deixam à beira da sobrecarga.', 'Quando há estímulos demais ao redor, sinto que não vou dar conta.'],
+  e5: ['Noto sons, cheiros ou mudanças de luz que passam despercebidos para quem está perto.', 'Pequenos detalhes do ambiente, como um zumbido ou um cheiro, chamam minha atenção antes da dos outros.'],
+  r1: ['Balançar o corpo, mexer as mãos ou bater os pés repetidamente me acalma ou me ajuda a focar.', 'Faço movimentos repetidos com o corpo, as mãos ou os pés para me acalmar ou me concentrar.'],
+  r2: ['Fico repetindo palavras, frases ou sons, em voz alta ou na cabeça.', 'Me pego repetindo sons ou frases para mim, falando ou em pensamento.'],
+  r3: ['Gosto de deixar minhas coisas numa ordem certa e fico incomodado(a) se alguém mexe.', 'Quando alguém muda a forma como arrumei meus objetos, isso me incomoda.'],
+  r4: ['Em momentos de estresse, faço mais esses movimentos ou repetições.', 'Quanto mais estressado(a) fico, mais esses movimentos ou repetições aparecem.'],
+  r5: ['Rever, reouvir ou reler a mesma coisa várias vezes me conforta.', 'Volto muitas vezes ao mesmo filme, música ou livro porque isso me tranquiliza.'],
+  o1: ['Quando um plano muda em cima da hora, fico desorganizado(a) por muito tempo.', 'Mudanças repentinas de planos me tiram do eixo por um bom tempo.'],
+  o2: ['Gosto de seguir sempre a mesma sequência ou o mesmo modo de fazer as coisas.', 'Fazer as coisas do mesmo jeito e na mesma ordem é o que prefiro.'],
+  o3: ['Imprevistos não me abalam muito.', 'Quando algo foge do planejado, me adapto com calma.'],
+  o4: ['Para encarar algo novo, preciso conhecer de antemão cada detalhe do que vai acontecer.', 'Situações novas só me deixam tranquilo(a) quando sei exatamente como vão ser.'],
+  o5: ['Trocar de uma tarefa para outra é difícil para mim.', 'Interromper o que estou fazendo para mudar de atividade exige esforço de mim.'],
+  i1: ['Me dedico a certos interesses com uma intensidade que os outros estranham.', 'As pessoas acham fora do comum o quanto me envolvo com alguns assuntos.'],
+  i2: ['Mergulhado(a) em algo que me interessa, esqueço da hora, de comer ou de descansar.', 'Absorvido(a) por um interesse, deixo de perceber o tempo passar e pulo refeições ou descanso.'],
+  i3: ['Sobre os temas de que gosto, coleciono informações detalhadas e bem organizadas.', 'Juntar e organizar dados minuciosos sobre meus assuntos favoritos me dá prazer.'],
+  i4: ['Quando falo de algo que gosto, é difícil passar para outro assunto.', 'Custo a sair de um tema que me interessa durante uma conversa.'],
+  i5: ['Os assuntos que mais me interessam continuam os mesmos ao longo dos anos.', 'Mantenho os mesmos interesses principais durante muito tempo.'],
+  m1: ['Copio o jeito como os outros se comportam em grupo para não chamar atenção por ser diferente.', 'Para me encaixar socialmente, observo as pessoas e reproduzo o que elas fazem.'],
+  m2: ['Ensaio mentalmente o que vou dizer antes de uma conversa.', 'Antes de conversar com alguém, preparo ou treino o que vou falar.'],
+  m3: ['Passar o dia tentando parecer à vontade com os outros me deixa exausto(a), mais do que o normal.', 'O esforço de parecer confortável com as pessoas me causa um cansaço fora do comum no fim do dia.'],
+  m4: ['Quem me conhece se espanta ao saber quanto algumas situações sociais me custam.', 'Quando digo que certas interações sociais são difíceis para mim, as pessoas ficam surpresas.'],
+  f1: ['O que foi descrito nas perguntas anteriores prejudica meu trabalho ou meus estudos.', 'Meu desempenho no trabalho ou nos estudos é afetado pelas situações das perguntas anteriores.'],
+  f2: ['Minhas relações com família, amigos ou parceiros(as) são afetadas por essas experiências.', 'Essas situações trazem dificuldades para meus vínculos com família, amizades ou parceiros(as).'],
+  f3: ['Dar conta da rotina me consome mais energia do que parece consumir dos outros.', 'O dia a dia me cansa mais do que cansa as pessoas ao meu redor.'],
+  f4: ['Fico tão esgotado(a) que preciso parar algumas atividades por um período.', 'O cansaço acumulado me força a me afastar de compromissos por um tempo.'],
+  x1: ['Custo a dar início a tarefas, até as que acho importantes.', 'Mesmo quando uma tarefa importa para mim, tenho dificuldade de começá-la.'],
+  x2: ['Esqueço prazos e compromissos ou não sei onde coloquei minhas coisas.', 'Me perco com datas, compromissos e com o lugar onde deixei objetos.'],
+  x3: ['Fico travado(a) quando preciso dividir uma tarefa longa em etapas.', 'Organizar os passos de um projeto longo me paralisa.'],
+  a1: ['Mesmo querendo focar, me distraio no meio de leituras ou conversas.', 'Durante uma leitura ou conversa, minha atenção escapa mesmo quando me esforço.'],
+  a2: ['Inicio muitas atividades e não termino boa parte delas.', 'Costumo deixar inacabado muito do que começo.'],
+  a3: ['Quando preciso me concentrar, meus pensamentos ou o ambiente tiram meu foco.', 'Na hora de me concentrar, qualquer pensamento ou movimento ao redor me distrai.'],
+  n1: ['Me preocupo com muitas coisas e não consigo desligar esses pensamentos.', 'Muitas preocupações ficam rodando na minha cabeça e é difícil pará-las.'],
+  n2: ['Fico tenso(a) ou inquieto(a) sem saber bem por quê.', 'Meu corpo fica tenso ou agitado mesmo sem uma razão aparente.'],
+  n3: ['Deixo de fazer coisas por achar que vão dar errado.', 'Fujo de certas situações porque espero que terminem mal.'],
+  h1: ['Passo vários dias seguidos me sentindo para baixo ou sem ânimo.', 'A tristeza ou o desânimo me acompanham por dias a fio.'],
+  h2: ['Coisas que antes me davam prazer deixaram de me interessar.', 'Não sinto mais o mesmo gosto por atividades que eu curtia.'],
+  h3: ['Mesmo descansando, continuo me sentindo esgotado(a).', 'Meu cansaço profundo não passa nem quando descanso.'],
+  z1: ['Levo mais de 30 minutos para conseguir dormir.', 'Depois de deitar, passo mais de meia hora até adormecer.'],
+  z2: ['Desperto de madrugada e custo a pegar no sono de novo.', 'Quando acordo no meio da noite, é difícil voltar a dormir.'],
+  z3: ['Mesmo dormindo as horas de que preciso, levanto cansado(a).', 'Durmo o suficiente e ainda assim acordo sem energia.'],
+}
+
+export const FORM_COUNT = 3
+export const FORM_LABEL = ['A', 'B', 'C'] as const
+
+/** Texto do item na forma indicada (0 = A, original; 1 = B; 2 = C). */
+export function itemText(item: Item, form = 0): string {
+  const f = ((form % FORM_COUNT) + FORM_COUNT) % FORM_COUNT
+  return f === 0 ? item.text : (ALT_FORMS[item.id]?.[f - 1] ?? item.text)
+}
+
+export const hasAllForms = (id: string) => !!ALT_FORMS[id]

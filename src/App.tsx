@@ -25,7 +25,8 @@ const ProfilePage = page(() => import('./features/profile/ProfilePage'), 'Profil
 const SharingPage = page(() => import('./features/sharing/SharingPage'), 'SharingPage')
 const DirectoryPage = page(() => import('./features/professionals/DirectoryPage'), 'DirectoryPage')
 const PortalPage = page(() => import('./features/professionals/PortalPage'), 'PortalPage')
-const ResearchPage = page(() => import('./features/research/ResearchPage'), 'ResearchPage')
+const BiPage = page(() => import('./features/bi/BiPage'), 'BiPage')
+const ParticipantsPage = page(() => import('./features/admin/ParticipantsPage'), 'ParticipantsPage')
 const GovernancePage = page(() => import('./features/governance/GovernancePage'), 'GovernancePage')
 const ReferencesPage = page(() => import('./features/references/ReferencesPage'), 'ReferencesPage')
 const HelpPage = page(() => import('./features/help/HelpPage'), 'HelpPage')
@@ -55,7 +56,8 @@ const ROUTES: RouteDef[] = [
   { pattern: '/compartilhar', component: SharingPage, roles: P, needsProfile: true },
   { pattern: '/profissionais', component: DirectoryPage, roles: ['participant', 'professional'] },
   { pattern: '/portal', component: PortalPage, roles: AREA_ACCESS.professional },
-  { pattern: '/pesquisa', component: ResearchPage, roles: AREA_ACCESS.research },
+  { pattern: '/bi', component: BiPage, roles: AREA_ACCESS.bi },
+  { pattern: '/participantes', component: ParticipantsPage, roles: AREA_ACCESS.registry },
   { pattern: '/governanca', component: GovernancePage, roles: AREA_ACCESS.governance },
 ]
 

@@ -5,7 +5,7 @@ import { LIFECYCLE, MODULES, USAGE_LABEL } from '../../domain/modules'
 import { REFERENCE_BY_ID, shortCitation } from '../../domain/references'
 import type { AssessmentModule } from '../../domain/types'
 import { fmtDateShort, plural } from '../../lib/format'
-import { latestCompleted, useStore, type State } from '../../state/store'
+import { latestCompleted, mySessions, useStore, type State } from '../../state/store'
 import { Button } from '../../ui/Button'
 import { PageHeader } from '../../ui/PageHeader'
 import { Badge, Meta, Surface } from '../../ui/Surface'
@@ -29,7 +29,7 @@ export function ModulesPage() {
 }
 
 function ModuleCard({ module: m, state, primary }: { module: AssessmentModule; state: State; primary: boolean }) {
-  const open = state.sessions.find((s) => s.moduleId === m.id && s.status === 'in-progress')
+  const open = mySessions(state).find((s) => s.moduleId === m.id && s.status === 'in-progress')
   const last = latestCompleted(state, m.id)
   const remaining = open ? remainingRange(m.id, open.responses) : null
   const stage = LIFECYCLE.find((l) => l.id === m.lifecycle)?.label

@@ -28,6 +28,7 @@ export const ACTION_LABEL: Record<string, string> = {
   'data.exported': 'Dados pessoais exportados',
   'data.erased': 'Todos os dados excluídos',
   'role.switched': 'Perfil de acesso alterado',
+  'participant.new': 'Novo participante iniciado',
   'research.exported': 'Exportação agregada de pesquisa',
   'checklist.updated': 'Aprovação de liberação atualizada',
   'audit.verified': 'Integridade do log verificada',

@@ -6,10 +6,10 @@ import { MODULE_BY_ID } from '../../domain/modules'
 import type { ShareGrant, ShareScope } from '../../domain/types'
 import { daysUntil, fmtDateShort, fmtDateTime, plural } from '../../lib/format'
 import type { RouteMatch } from '../../lib/router'
-import { completedSessions, createShare, professionalName, revokeShare, shareStatus, useStore } from '../../state/store'
+import { completedSessions, createShare, myShares, professionalName, revokeShare, shareStatus, useStore } from '../../state/store'
 import { Button } from '../../ui/Button'
 import { Dialog } from '../../ui/Dialog'
-import { Checkbox, ChoiceGroup, Select, TextField } from '../../ui/Field'
+import { Checkbox, ChoiceGroup, Select } from '../../ui/Field'
 import { PageHeader, SectionTitle } from '../../ui/PageHeader'
 import { Badge, Callout, EmptyState, Surface } from '../../ui/Surface'
 import { Table, td, th } from '../../ui/Table'
@@ -27,7 +27,7 @@ export function SharingPage({ match }: { match: RouteMatch }) {
   const state = useStore()
   const sessions = completedSessions(state)
   const [created, setCreated] = useState<ShareGrant | null>(null)
-  const grants = [...state.shares].reverse()
+  const grants = [...myShares(state)].reverse()
 
   return (
     <div className="container-page grid gap-16 pb-10">
@@ -114,7 +114,6 @@ function NewShare({ defaultSession, defaultPro, onCreated }: { defaultSession: s
   const sessions = completedSessions(state)
   const [sessionId, setSessionId] = useState(sessions.some((s) => s.id === defaultSession) ? defaultSession : sessions[0]!.id)
   const [pro, setPro] = useState(defaultPro)
-  const [otherName, setOtherName] = useState('')
   const [scope, setScope] = useState<ShareScope>('summary')
   const [days, setDays] = useState('30')
   const [consent, setConsent] = useState(false)
@@ -124,15 +123,14 @@ function NewShare({ defaultSession, defaultPro, onCreated }: { defaultSession: s
   const submit = (e: FormEvent) => {
     e.preventDefault()
     const next: Record<string, string> = {}
-    if (!pro) next.pro = 'Escolha para quem é o acesso.'
-    if (pro === 'other' && !otherName.trim()) next.other = 'Escreva o nome do profissional ou serviço.'
+    if (!pro || !PROFESSIONALS.some((p) => p.id === pro)) next.pro = 'Escolha um profissional cadastrado.'
     if (!consent) next.consent = 'Marque a autorização para criar o acesso.'
     setErrors(next)
     if (Object.keys(next).length) return
     const grant = createShare({
       sessionId,
-      professionalId: pro === 'other' ? null : pro,
-      professionalLabel: pro === 'other' ? otherName.trim() : '',
+      professionalId: pro,
+      professionalLabel: '',
       scope,
       days: Number(days),
     })
@@ -158,16 +156,12 @@ function NewShare({ defaultSession, defaultPro, onCreated }: { defaultSession: s
             value={pro}
             onChange={(e) => setPro(e.target.value)}
             error={errors.pro}
-            hint="O diretório desta demonstração é fictício."
+            hint="Só profissionais cadastrados no PERCEBER podem receber o código de acesso."
             options={[
               { value: '', label: 'Escolha um profissional' },
               ...PROFESSIONALS.map((p) => ({ value: p.id, label: `${p.name} (fictício)` })),
-              { value: 'other', label: 'Outro profissional, fora do diretório' },
             ]}
           />
-          {pro === 'other' && (
-            <TextField label="Nome do profissional ou serviço" value={otherName} onChange={(e) => setOtherName(e.target.value)} error={errors.other} className="md:col-span-2" />
-          )}
         </div>
         <ChoiceGroup
           legend="O que o profissional poderá ver"

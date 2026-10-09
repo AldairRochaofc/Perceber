@@ -1,16 +1,22 @@
-import { FileText, Share2, Layers, PlayCircle, RotateCcw } from 'lucide-react'
+import { useState } from 'react'
+import { FileText, Share2, Layers, RotateCcw } from 'lucide-react'
 import { DOMAIN_BY_ID } from '../../domain/domains'
 import { MODULE_BY_ID } from '../../domain/modules'
 import { CANNOT_SUPPORT, CAN_SUPPORT, NEXT_STEP, SIGNALS } from '../../domain/signals'
+import { COMPLEXITY_LABEL, RELIABILITY_LABEL, fmtSeconds, sessionReliability } from '../../domain/timing'
+import type { AssessmentSession } from '../../domain/types'
 import { fmtDateTime } from '../../lib/format'
+import { navigate } from '../../lib/router'
 import type { RouteMatch } from '../../lib/router'
-import { latestCompleted, sessionById, useStore } from '../../state/store'
+import { latestCompleted, sessionById, startOver, useStore } from '../../state/store'
 import { Button } from '../../ui/Button'
+import { Dialog } from '../../ui/Dialog'
 import { DomainList } from '../../ui/DomainList'
 import { PageHeader, SectionTitle } from '../../ui/PageHeader'
 import { PatternSwatch } from '../../ui/patterns'
 import { SignalMeter } from '../../ui/SignalMeter'
 import { Callout, Meta, Surface } from '../../ui/Surface'
+import { Table, td, th } from '../../ui/Table'
 import { ContextFactorsPanel, HowWeCalculated, QualityPanel, UncertaintyPanel } from './Explain'
 import { PerceptionMap } from './PerceptionMap'
 import { ResultCharts } from './ResultCharts'
@@ -19,6 +25,7 @@ export function ResultPage({ match }: { match: RouteMatch }) {
   const state = useStore()
   const session = sessionById(state, match.params.id ?? '')
   const result = session?.result
+  const [restartOpen, setRestartOpen] = useState(false)
 
   if (!session || !result) {
     return (
@@ -38,7 +45,6 @@ export function ResultPage({ match }: { match: RouteMatch }) {
   const contextScores = result.domains.filter((d) => DOMAIN_BY_ID[d.domain].group === 'context')
   const signal = result.signal ? SIGNALS[result.signal] : null
   const hasCooccurring = !!latestCompleted(state, 'cooccurring')
-  const openRetake = state.sessions.find((x) => x.moduleId === session.moduleId && x.status === 'in-progress')
   const mood = result.domains.find((d) => d.domain === 'mood')
 
   return (
@@ -185,6 +191,8 @@ export function ResultPage({ match }: { match: RouteMatch }) {
         </div>
       </section>
 
+      <TimeReliability session={session} />
+
       <section aria-labelledby="fatores-title" className="grid gap-5">
         <SectionTitle id="fatores-title" title="Fatores de contexto que você informou" lead="Podem ter influenciado as respostas de hoje." />
         <ContextFactorsPanel session={session} />
@@ -212,17 +220,82 @@ export function ResultPage({ match }: { match: RouteMatch }) {
               Responder áreas coocorrentes
             </Button>
           )}
-          {openRetake ? (
-            <Button to={`/avaliacao/${openRetake.id}`} variant="secondary" icon={<PlayCircle size={18} aria-hidden="true" />}>
-              Continuar novo teste
-            </Button>
-          ) : (
-            <Button to={`/antes-de-comecar?modulo=${session.moduleId}`} variant="secondary" icon={<RotateCcw size={18} aria-hidden="true" />}>
-              Refazer o teste
-            </Button>
-          )}
+          <Button variant="secondary" onClick={() => setRestartOpen(true)} icon={<RotateCcw size={18} aria-hidden="true" />}>
+            Refazer o teste
+          </Button>
         </div>
       </Surface>
+
+      <Dialog
+        open={restartOpen}
+        onClose={() => setRestartOpen(false)}
+        size="sm"
+        title="Começar um teste do zero?"
+        description="O teste recomeça como para alguém que nunca usou o PERCEBER: consentimentos, cadastro e perguntas com outra redação. Este resultado continua registrado."
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => setRestartOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              icon={<RotateCcw size={17} aria-hidden="true" />}
+              onClick={() => {
+                setRestartOpen(false)
+                startOver()
+                navigate('/comecar')
+              }}
+            >
+              Começar do zero
+            </Button>
+          </>
+        }
+      />
     </div>
+  )
+}
+
+function TimeReliability({ session }: { session: AssessmentSession }) {
+  const rel = sessionReliability(session.responses, session.form)
+  if (rel.mean === null) return null
+  return (
+    <section aria-labelledby="tempo-title" className="grid gap-6">
+      <SectionTitle
+        id="tempo-title"
+        title="Confiabilidade pelo tempo de resposta"
+        lead="Cada pergunta tem um tempo ideal, conforme a complexidade (baixa, média ou alta). Confiabilidade = confiança do tempo × resposta dada."
+      />
+      <div className="grid gap-6 lg:grid-cols-[1fr_2fr]">
+        <div className="grid content-start gap-2 rounded-lg bg-surface p-6 ring-1 ring-line">
+          <p className="text-sm font-semibold text-text-muted">Confiabilidade geral</p>
+          <p className="font-display text-display-md tabular">{Math.round(rel.mean * 100)}%</p>
+          <p className="font-semibold text-ink">{RELIABILITY_LABEL[rel.level!]}</p>
+          <p className="text-sm text-text-muted">
+            {rel.tooFast} {rel.tooFast === 1 ? 'resposta rápida demais' : 'respostas rápidas demais'} para a leitura · {rel.tooSlow} {rel.tooSlow === 1 ? 'muito demorada' : 'muito demoradas'}
+          </p>
+        </div>
+        <Table caption="Tempo ideal e tempo real por complexidade da pergunta">
+          <thead>
+            <tr>
+              <th className={th} scope="col">Complexidade</th>
+              <th className={th} scope="col">Perguntas</th>
+              <th className={th} scope="col">Tempo ideal</th>
+              <th className={th} scope="col">Seu tempo (mediana)</th>
+              <th className={th} scope="col">Confiabilidade</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rel.byComplexity.map((c) => (
+              <tr key={c.complexity}>
+                <th className={td} scope="row">{COMPLEXITY_LABEL[c.complexity]}</th>
+                <td className={`${td} tabular`}>{c.n}</td>
+                <td className={`${td} tabular`}>{c.idealMs === null ? '—' : fmtSeconds(c.idealMs)}</td>
+                <td className={`${td} tabular`}>{c.medianMs === null ? '—' : fmtSeconds(c.medianMs)}</td>
+                <td className={`${td} tabular`}>{c.mean === null ? '—' : `${Math.round(c.mean * 100)}%`}</td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </div>
+    </section>
   )
 }

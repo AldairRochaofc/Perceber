@@ -32,12 +32,14 @@ function navFor(role: Role, hasProfile: boolean): NavItem[] {
           ]
         : [{ to: '/', label: 'Início' }, ...common]
     case 'professional':
-      return [{ to: '/portal', label: 'Portal profissional' }, { to: '/profissionais', label: 'Diretório' }, ...common]
-    case 'researcher':
-      return [{ to: '/pesquisa', label: 'Pesquisa' }, ...common]
+      return [{ to: '/portal', label: 'Portal profissional' }, { to: '/bi', label: 'Relatório BI' }, { to: '/profissionais', label: 'Diretório' }, ...common]
     case 'admin':
-    case 'committee':
-      return [{ to: '/governanca', label: 'Governança' }, ...common]
+      return [
+        { to: '/participantes', label: 'Participantes' },
+        { to: '/bi', label: 'Relatório BI' },
+        { to: '/governanca', label: 'Governança' },
+        ...common,
+      ]
   }
 }
 

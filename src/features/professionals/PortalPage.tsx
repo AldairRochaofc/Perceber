@@ -1,7 +1,8 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { BadgeCheck, Eye, KeyRound, LogOut } from 'lucide-react'
 import { DOMAIN_BY_ID } from '../../domain/domains'
-import { ITEM_BY_ID, SCALE_LABEL } from '../../domain/items'
+import { ITEM_BY_ID, SCALE_LABEL, itemText } from '../../domain/items'
+import { fmtSeconds, itemTiming, responseReliability } from '../../domain/timing'
 import { MODULE_BY_ID } from '../../domain/modules'
 import { BAND_LABEL, QUALITY_LEVEL_LABEL } from '../../domain/scoring'
 import { SIGNALS } from '../../domain/signals'
@@ -227,6 +228,7 @@ function ProfessionalView({ grant, onClose }: { grant: ShareGrant; onClose: () =
                 <th className={th} scope="col">Item</th>
                 <th className={th} scope="col">Domínio</th>
                 <th className={th} scope="col">Resposta</th>
+                <th className={th} scope="col">Tempo · confiabilidade</th>
               </tr>
             </thead>
             <tbody>
@@ -235,11 +237,12 @@ function ProfessionalView({ grant, onClose }: { grant: ShareGrant; onClose: () =
                 return (
                   <tr key={r.itemId}>
                     <td className={td}>
-                      {item.text}
+                      {itemText(item, session.form)}
                       {item.reverse && <span className="block text-caption text-text-subtle">frase invertida na pontuação</span>}
                     </td>
                     <td className={`${td} whitespace-nowrap`}>{DOMAIN_BY_ID[item.domain].code}</td>
                     <td className={`${td} whitespace-nowrap`}>{r.value === null ? 'Prefiro não responder' : SCALE_LABEL(r.value)}</td>
+                    <td className={`${td} whitespace-nowrap tabular`}>{fmtSeconds(r.latencyMs)} · {Math.round(responseReliability(r.latencyMs, r.value, itemTiming(r.itemId, session.form)).reliability * 100)}%</td>
                   </tr>
                 )
               })}

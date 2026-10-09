@@ -1,3 +1,4 @@
+import type { Gender } from './people'
 /* Modelo de dados do PERCEBER. Ver docs/ARQUITETURA.md */
 
 export type DomainGroup = 'central' | 'context' | 'cooccurring'
@@ -88,6 +89,10 @@ export type ContextFactors = {
 
 export type AssessmentSession = {
   id: string
+  /** Pessoa (perfil) que respondeu. Ausente em sessões antigas. */
+  personId?: string
+  /** Forma do banco de itens: 0 = A, 1 = B, 2 = C. */
+  form?: number
   moduleId: ModuleId
   moduleVersion: string
   itemBankVersion: string
@@ -168,6 +173,7 @@ export type Profile = {
   civilName?: string
   pronouns?: string
   ageBand: AgeBand
+  gender?: Gender
   language: 'pt-BR'
   reason?: string
   contactChannel?: string
@@ -212,7 +218,7 @@ export type ExportRecord = {
   platformVersion: string
 }
 
-export type Role = 'participant' | 'professional' | 'researcher' | 'admin' | 'committee'
+export type Role = 'participant' | 'professional' | 'admin'
 
 export type AuditEntry = {
   seq: number

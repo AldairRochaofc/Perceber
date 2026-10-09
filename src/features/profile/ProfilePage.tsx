@@ -1,14 +1,13 @@
 import { useState, type FormEvent } from 'react'
-import { Download, Trash2 } from 'lucide-react'
+import { Download } from 'lucide-react'
 import { ACTION_LABEL } from '../../domain/audit'
 import { CONSENTS, CONSENT_BY_ID, consentState } from '../../domain/consents'
 import { REASONS } from '../../domain/content'
 import type { AgeBand } from '../../domain/types'
 import { fmtDateTime } from '../../lib/format'
-import { navigate } from '../../lib/router'
 import { shortHash } from '../../lib/sha256'
 import { downloadFile } from '../../lib/storage'
-import { eraseAll, exportAllData, recordConsent, updateProfile, useStore } from '../../state/store'
+import { exportAllData, recordConsent, updateProfile, useStore } from '../../state/store'
 import { Button } from '../../ui/Button'
 import { Dialog } from '../../ui/Dialog'
 import { Checkbox, Select, TextField } from '../../ui/Field'
@@ -256,11 +255,9 @@ function ConsentManager() {
 }
 
 function Rights() {
-  const [eraseOpen, setEraseOpen] = useState(false)
-  const [typed, setTyped] = useState('')
   return (
     <section aria-labelledby="direitos-title" className="grid gap-6">
-      <SectionTitle id="direitos-title" title="Seus direitos sobre os dados" lead="Acesso, correção, portabilidade e exclusão. Nesta demonstração, tudo acontece no seu navegador." />
+      <SectionTitle id="direitos-title" title="Seus direitos sobre os dados" lead="Acesso, correção e portabilidade. Nesta demonstração, tudo acontece no seu navegador." />
       <div className="grid gap-4 md:grid-cols-2">
         <div className="grid content-start gap-3 rounded-lg bg-surface p-6 ring-1 ring-line">
           <h3 className="font-sans text-ui font-semibold">Exportar meus dados</h3>
@@ -279,47 +276,14 @@ function Rights() {
             </Button>
           </div>
         </div>
-        <div className="grid content-start gap-3 rounded-lg bg-surface p-6 ring-1 ring-danger/30">
-          <h3 className="font-sans text-ui font-semibold">Excluir tudo</h3>
-          <p className="text-sm text-text-muted">Apaga perfil, respostas, resultados, compartilhamentos e histórico deste navegador. Preferências de acessibilidade são mantidas.</p>
-          <div>
-            <Button variant="danger" size="sm" icon={<Trash2 size={16} aria-hidden="true" />} onClick={() => setEraseOpen(true)}>
-              Excluir todos os dados
-            </Button>
-          </div>
+        <div className="grid content-start gap-3 rounded-lg bg-surface p-6 ring-1 ring-line">
+          <h3 className="font-sans text-ui font-semibold">Dados coletados ficam registrados</h3>
+          <p className="text-sm text-text-muted">Você autorizou a coleta antes de começar. Por isso, respostas e resultados já registrados não podem ser excluídos por aqui.</p>
         </div>
       </div>
       <Callout tone="neutral" title="Em uso real">
         Pedidos de informação e eventuais registros que precisem ser mantidos por obrigação legal serão tratados pelo encarregado de dados da instituição responsável, ainda a definir.
       </Callout>
-      <Dialog
-        open={eraseOpen}
-        onClose={() => setEraseOpen(false)}
-        size="sm"
-        title="Excluir todos os seus dados?"
-        description="Não é possível desfazer. Exporte antes se quiser guardar uma cópia."
-        actions={
-          <>
-            <Button variant="secondary" onClick={() => setEraseOpen(false)}>
-              Cancelar
-            </Button>
-            <Button
-              variant="danger"
-              disabled={typed.trim().toLowerCase() !== 'excluir'}
-              onClick={() => {
-                eraseAll()
-                setEraseOpen(false)
-                notify('Todos os dados foram excluídos')
-                navigate('/')
-              }}
-            >
-              Excluir tudo
-            </Button>
-          </>
-        }
-      >
-        <TextField label='Para confirmar, escreva "excluir"' value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />
-      </Dialog>
     </section>
   )
 }

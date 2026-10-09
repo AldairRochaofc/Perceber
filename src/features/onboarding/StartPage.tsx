@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { CONSENTS } from "../../domain/consents";
 import { REASONS } from "../../domain/content";
+import { GENDERS, GENDER_LABEL, type Gender } from "../../domain/people";
 import type { AgeBand, ConsentId } from "../../domain/types";
 import { navigate } from "../../lib/router";
 import { createProfile, recordConsent, useStore } from "../../state/store";
@@ -164,10 +165,11 @@ function AboutStep({
   );
   const [name, setName] = useState("");
   const [age, setAge] = useState<AgeBand | "">("");
+  const [gender, setGender] = useState<Gender | "">("");
   const [pronouns, setPronouns] = useState("");
   const [reason, setReason] = useState("");
   const [contact, setContact] = useState("");
-  const [errors, setErrors] = useState<{ name?: string; age?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; age?: string; gender?: string }>({});
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -175,11 +177,13 @@ function AboutStep({
     if (!name.trim())
       next.name = "Escreva como você quer ser chamado(a). Pode ser um apelido.";
     if (!age) next.age = "Escolha uma faixa, ou “Prefiro não informar”.";
+    if (!gender) next.gender = "Escolha uma opção, ou “Prefiro não informar”.";
     setErrors(next);
-    if (next.name || next.age) return;
+    if (next.name || next.age || next.gender) return;
     createProfile({
       preferredName: name.trim(),
       ageBand: age as AgeBand,
+      gender: gender as Gender,
       pronouns: pronouns.trim() || undefined,
       reason: reason || undefined,
       contactChannel: contactGranted ? contact.trim() || undefined : undefined,
@@ -214,6 +218,18 @@ function AboutStep({
           onChange={(e) => setAge(e.target.value as AgeBand | "")}
           options={AGE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
           error={errors.age}
+          required
+        />
+        <Select
+          label="Gênero"
+          hint="Usado só em relatórios agregados do público pesquisado."
+          value={gender}
+          onChange={(e) => setGender(e.target.value as Gender | "")}
+          options={[
+            { value: "", label: "Escolha uma opção" },
+            ...GENDERS.map((g) => ({ value: g, label: g === "prefer-not" ? "Prefiro não informar" : GENDER_LABEL[g] })),
+          ]}
+          error={errors.gender}
           required
         />
         <TextField
