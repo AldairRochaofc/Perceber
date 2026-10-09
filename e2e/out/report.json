@@ -53,7 +53,7 @@
   "backKeepsAnswer": true,
   "questionsAnswered": 36,
   "signal": "Sinal de triagem\n\nAvaliação profissional sugerida\n\nFaixa 4 de 4: Avaliação profissional sugerida.\nBaixa indicação\nIndicação moderada\nIndicação elevada\nAvaliação profissional sugerida",
-  "code": "PRC-EEAG-ZFS2",
+  "code": "PRC-79PC-HNRE",
   "participants": "",
   "auditVerification": "Cadeia íntegra: 16 registros conferidos",
   "revokedMessage": 1,
@@ -65,6 +65,6 @@
   "overflow-m-resultado": 0,
   "overflow-m-painel": 0,
   "overflow-m-compartilhar": 0,
-  "centralSession": "av_9405a02b26983eca617b",
+  "centralSession": "av_2a7cc0b274e7f7a0aa94",
   "errors": []
 }
